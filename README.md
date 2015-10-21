@@ -31,3 +31,5 @@ http://blog.csdn.net/fredomyan/article/details/46926107
 2.不适用循环曲线
 
 3.手势滑动
+
+4.扩展实现弧形ScrollView
