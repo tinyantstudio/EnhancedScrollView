@@ -8,7 +8,7 @@ We can use AnimationCurve in many useful and powerful ways.
 If you want to find the result of the project please go : http://blog.csdn.net/fredomyan/article/details/46926107
 
 
-Now for Chinease.
+Now for Chinese.
 
 使用Unity3D提供的AnimationCurve实现卡片滚动效果，当然实现该功能的方式多种多样，选取了AnimationCurve作为基础，为了介绍下它的多动能和强大。
 
