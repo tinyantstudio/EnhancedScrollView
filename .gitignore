@@ -1,0 +1,12 @@
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+*.apk
+*.unitypackage
+*.csproj
+*.suo
+*.tmp
+*.sln
+
