@@ -1,0 +1,13 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/PlugIns/NGUI/Interaction/LanguageSelection.cs">
+    <Files>
+      <File FileName="Assets/PlugIns/NGUI/UI/UIRoot.cs" Line="93" Column="30" />
+      <File FileName="Assets/PlugIns/NGUI/Interaction/LanguageSelection.cs" Line="21" Column="39" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
