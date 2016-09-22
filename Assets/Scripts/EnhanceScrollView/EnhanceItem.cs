@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class EnhanceItem : MonoBehaviour {
+public class EnhanceItem : MonoBehaviour
+{
 
     // 在ScrollViewitem中的索引
     // 定位当前的位置和缩放
@@ -13,7 +14,12 @@ public class EnhanceItem : MonoBehaviour {
 
     private Transform mTrs;
     private UITexture mTexture;
-
+    private int curRealIndex = 0;
+    public int RealIndex
+    {
+        get { return this.curRealIndex; }
+        set { this.curRealIndex = value; }
+    }
 
     void Awake()
     {
@@ -35,10 +41,12 @@ public class EnhanceItem : MonoBehaviour {
     /// <summary>
     /// 更新该Item的缩放和位移
     /// </summary>
-    public void UpdateScrollViewItems(float xValue, float yValue, float scaleValue)
+    public void UpdateScrollViewItems(float xValue, float zPosValue, float yValue, float scaleValue)
     {
         targetPos.x = xValue;
         targetPos.y = yValue;
+        // targetPos.z = zPosValue;
+        mTexture.depth = (int)Mathf.Abs(zPosValue);
         targetScale.x = targetScale.y = scaleValue;
 
         mTrs.localPosition = targetPos;
@@ -50,9 +58,9 @@ public class EnhanceItem : MonoBehaviour {
         if (mTexture == null)
             mTexture = this.GetComponent<UITexture>();
 
-        if (isCenter)
-            mTexture.color = Color.white;
-        else
-            mTexture.color = Color.gray;
+        //if (isCenter)
+        //    mTexture.color = Color.white;
+        //else
+        //    mTexture.color = Color.gray;
     }
 }

@@ -2,47 +2,44 @@
 using System.Collections;
 using System.Collections.Generic;
 
-// [ExecuteInEditMode]
 public class EnhancelScrollView : MonoBehaviour
 {
-    // 缩放曲线
+    // Control the item's scale curve
     public AnimationCurve scaleCurve;
-    // 位移曲线
+    // Control the position curve
     public AnimationCurve positionCurve;
-    // 位移系数
+    // Control the "depth"'s curve(In 3d version just the Z value, in 2D UI you can use the depth(NGUI))
+    // NOTE:
+    // 1. In NGUI set the widget's depth may cause performance problem
+    // 2. If you use 3D UI just set the Item's Z position
+    public AnimationCurve depthCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
     public float posCurveFactor = 500.0f;
-    // y轴坐标固定值(所有的item的y坐标一致)
-    public float yPositionValue = 46.0f;
+    // vertical fixed position value 
+    public float yFixedPositionValue = 46.0f;
 
-    // 添加到EnhanceScrollView的目标对象
+    // targets in scroll view
     public List<EnhanceItem> scrollViewItems;
-    // 目标对象Widget脚本，用于depth排序
-    private List<UITexture> textureTargets;
 
-    // 当前处于中间的item
-    private EnhanceItem centerItem;
+    // center and preCentered item
+    private EnhanceItem curCenterItem;
     private EnhanceItem preCenterItem;
 
-    // 当前出移动中，不能进行点击切换
+    // if we can change the target item
     private bool canChangeItem = true;
+    private float dFactor = 0.2f;
 
-    // 计算差值系数
-    public float dFactor = 0.2f;
-    
-    // 点击目标移动的横向目标值
-    private float[] moveHorizontalValues;
-    // 对象之间的差值数组(根据差值系数算出)
+    // each item's horizontal value offset
     private float[] dHorizontalValues;
 
-    // 横向变量值
-    public float horizontalValue = 0.0f;
-    // 目标值
-    public float horizontalTargetValue = 0.1f;
-
-    // 移动动画参数
+    // originHorizontalValue Lerp to horizontalTargetValue
+    private float cachedHorizontalValue = 0.0f;
     private float originHorizontalValue = 0.1f;
-    public float duration = 0.2f;
-    private float currentDuration = 0.0f;
+    public float horizontalTargetValue = 0.5f;
+
+    // Lerp duration
+    public float lerpDuration = 0.2f;
+    private float mCurrentDuration = 0.0f;
+    private int mCenterIndex = 0;
 
     private static EnhancelScrollView instance;
     public static EnhancelScrollView GetInstance()
@@ -57,36 +54,31 @@ public class EnhancelScrollView : MonoBehaviour
 
     void Start()
     {
-        if((scrollViewItems.Count % 2) == 0)    
-        {
-            Debug.LogError("item count is invaild,please set odd count! just support odd count.");
-        }
+        dFactor = (Mathf.RoundToInt((1f / scrollViewItems.Count) * 10000f)) * 0.0001f;
+        Debug.Log("## calculate factor : " + dFactor);
 
-        if(moveHorizontalValues == null)
-            moveHorizontalValues = new float[scrollViewItems.Count];
-
-        if(dHorizontalValues == null)
+        if (dHorizontalValues == null)
             dHorizontalValues = new float[scrollViewItems.Count];
+        mCenterIndex = scrollViewItems.Count / 2;
+        if (scrollViewItems.Count % 2 == 0)
+            mCenterIndex = scrollViewItems.Count / 2 - 1;
 
-        if (textureTargets == null)
-            textureTargets = new List<UITexture>();
-
-        int centerIndex = scrollViewItems.Count / 2;
-        for (int i = 0; i < scrollViewItems.Count;i++ )
+        for (int i = 0; i < scrollViewItems.Count; i++)
         {
             scrollViewItems[i].scrollViewItemIndex = i;
-            UITexture tmpTexture = scrollViewItems[i].gameObject.GetComponent<UITexture>();
-            textureTargets.Add(tmpTexture);
-
-            dHorizontalValues[i] = dFactor * (centerIndex - i);
-
-            dHorizontalValues[centerIndex] = 0.0f;
-            moveHorizontalValues[i] = 0.5f - dHorizontalValues[i];
+            dHorizontalValues[i] = dFactor * (mCenterIndex - i);
+            dHorizontalValues[mCenterIndex] = 0.0f;
             scrollViewItems[i].SetSelectColor(false);
+            Debug.Log("## value " + dFactor * (mCenterIndex - i));
         }
 
-        centerItem = scrollViewItems[centerIndex];
+        curCenterItem = scrollViewItems[mCenterIndex];
         canChangeItem = true;
+        cachedHorizontalValue = Mathf.Lerp(originHorizontalValue, horizontalTargetValue, 1.0f);
+        originHorizontalValue = horizontalTargetValue;
+        UpdateEnhanceScrollView(cachedHorizontalValue);
+        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.scrollViewItems);
+        SortViewItem(tmpList);
     }
 
     public void UpdateEnhanceScrollView(float fValue)
@@ -96,153 +88,144 @@ public class EnhancelScrollView : MonoBehaviour
             EnhanceItem itemScript = scrollViewItems[i];
             float xValue = GetXPosValue(fValue, dHorizontalValues[itemScript.scrollViewItemIndex]);
             float scaleValue = GetScaleValue(fValue, dHorizontalValues[itemScript.scrollViewItemIndex]);
-            itemScript.UpdateScrollViewItems(xValue, yPositionValue, scaleValue);
+            float zValue = depthCurve.Evaluate(fValue + dHorizontalValues[itemScript.scrollViewItemIndex]);
+            itemScript.UpdateScrollViewItems(xValue, -zValue * 50, yFixedPositionValue, scaleValue);
         }
     }
 
     void Update()
     {
-        currentDuration += Time.deltaTime;
-        if (currentDuration > duration)
+        mCurrentDuration += Time.deltaTime;
+        if (mCurrentDuration > lerpDuration)
         {
-            // 更新完毕设置选中item的对象即可
-            currentDuration = duration;
-            if(centerItem != null)
-                centerItem.SetSelectColor(true);
-            if(preCenterItem != null)
+            mCurrentDuration = lerpDuration;
+            if (curCenterItem != null)
+                curCenterItem.SetSelectColor(true);
+            if (preCenterItem != null)
                 preCenterItem.SetSelectColor(false);
             canChangeItem = true;
         }
 
-        SortDepth();
-        float percent = currentDuration / duration;
-        horizontalValue = Mathf.Lerp(originHorizontalValue, horizontalTargetValue, percent);
-        UpdateEnhanceScrollView(horizontalValue);
+        float percent = mCurrentDuration / lerpDuration;
+        cachedHorizontalValue = Mathf.Lerp(originHorizontalValue, horizontalTargetValue, percent);
+        UpdateEnhanceScrollView(cachedHorizontalValue);
     }
 
-    /// <summary>
-    /// 缩放曲线模拟当前缩放值
-    /// </summary>
+    // Get the evaluate value to set item's scale
     private float GetScaleValue(float sliderValue, float added)
     {
         float scaleValue = scaleCurve.Evaluate(sliderValue + added);
         return scaleValue;
     }
 
-    /// <summary>
-    /// 位置曲线模拟当前x轴位置
-    /// </summary>
+
+    // Get the X value set the Item's position
     private float GetXPosValue(float sliderValue, float added)
     {
         float evaluateValue = positionCurve.Evaluate(sliderValue + added) * posCurveFactor;
         return evaluateValue;
     }
 
-    public void SortDepth()
+    // sort item with X so we can know how much distance we need to move the timeLine(curve time line)
+    static public int SortPosition(EnhanceItem a, EnhanceItem b) { return a.transform.localPosition.x.CompareTo(b.transform.localPosition.x); }
+    private int GetMoveCurveFactorCount(EnhanceItem item)
     {
-        textureTargets.Sort(new CompareDepthMethod());
-        for (int i = 0; i < textureTargets.Count; i++)
-            textureTargets[i].depth = i;
+        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.scrollViewItems);
+        SortViewItem(tmpList);
+        int factorCount = Mathf.Abs(item.RealIndex) - Mathf.Abs(mCenterIndex);
+        return Mathf.Abs(factorCount);
+
+        // Testing code
+        // Debug.Log("## Move factor count is " + factorCount + "  " + mCenterIndex + "  realIndex " + item.RealIndex);
+        //float targetXPos = item.transform.localPosition.x;
+        //for (int i = 0; i < scrollViewItems.Count; i++)
+        //{
+        //    float factor = (0.5f - dFactor * (mCenterIndex - i));
+        //    float tempPosX = positionCurve.Evaluate(factor) * posCurveFactor;
+        //    // Debug.Log(string.Format("factor:{0}, tempPosx:{1}, dis:{2}.", factor, tempPosX, Mathf.Abs(targetXPos - tempPosX)));
+        //}
     }
 
-    /// <summary>
-    /// 用于层级对比接口
-    /// </summary>
-    public class CompareDepthMethod : IComparer<UITexture>
+    private void SortViewItem(List<EnhanceItem> items)
     {
-        public int Compare(UITexture left, UITexture right)
-        {
-            if (left.transform.localScale.x > right.transform.localScale.x)
-                return 1;
-            else if (left.transform.localScale.x < right.transform.localScale.x)
-                return -1;
-            else
-                return 0;
-        }
+        items.Sort(SortPosition);
+        for (int i = items.Count - 1; i >= 0; i--)
+            items[i].RealIndex = i;
     }
 
-    /// <summary>
-    /// 获得当前要移动到中心的Item需要移动的factor间隔数
-    /// </summary>
-    private int GetMoveCurveFactorCount(float targetXPos)
-    {
-        int centerIndex = scrollViewItems.Count / 2;
-        for (int i = 0; i < scrollViewItems.Count;i++ )
-        {
-            float factor = (0.5f - dFactor * (centerIndex - i));
-
-            float tempPosX = positionCurve.Evaluate(factor) * posCurveFactor;
-            if (Mathf.Abs(targetXPos - tempPosX) < 0.01f)
-                return Mathf.Abs(i - centerIndex);
-        }
-        return -1;
-    }
-
-    /// <summary>
-    /// 设置横向轴参数，根据缩放曲线和位移曲线更新缩放和位置
-    /// </summary>
     public void SetHorizontalTargetItemIndex(int itemIndex)
     {
         if (!canChangeItem)
             return;
 
         EnhanceItem item = scrollViewItems[itemIndex];
-        if (centerItem == item)
+        if (curCenterItem == item)
             return;
 
         canChangeItem = false;
-        preCenterItem = centerItem;
-        centerItem = item;
+        preCenterItem = curCenterItem;
+        curCenterItem = item;
 
-        // 判断点击的是左侧还是右侧计算ScrollView中心需要移动的value
+        // calculate the direction of moving
         float centerXValue = positionCurve.Evaluate(0.5f) * posCurveFactor;
         bool isRight = false;
         if (item.transform.localPosition.x > centerXValue)
             isRight = true;
 
-        // 差值,计算横向值
-        int moveIndexCount = GetMoveCurveFactorCount(item.transform.localPosition.x);
-        if (moveIndexCount == -1)
-        {
-            Debug.LogWarning("*****Move Index count is invalid.");
-            moveIndexCount = 1; 
-        }
-
+        // calculate the offset * dFactor
+        int moveIndexCount = GetMoveCurveFactorCount(item);
         float dvalue = 0.0f;
         if (isRight)
             dvalue = -dFactor * moveIndexCount;
         else
             dvalue = dFactor * moveIndexCount;
 
-        // 更改target数值，平滑移动
         horizontalTargetValue += dvalue;
-        currentDuration = 0.0f;
-        originHorizontalValue = horizontalValue;
+        mCurrentDuration = 0.0f;
+        originHorizontalValue = cachedHorizontalValue;
     }
 
-    /// <summary>
-    /// 向右选择角色按钮
-    /// </summary>
+    // Click the right button to select the next item.
     public void OnBtnRightClick()
     {
         if (!canChangeItem)
             return;
-        int targetIndex = centerItem.scrollViewItemIndex + 1;
+        int targetIndex = curCenterItem.scrollViewItemIndex + 1;
         if (targetIndex > scrollViewItems.Count - 1)
             targetIndex = 0;
         SetHorizontalTargetItemIndex(targetIndex);
     }
 
-    /// <summary>
-    /// 向左选择按钮
-    /// </summary>
+    // Click the left button the select next next item.
     public void OnBtnLeftClick()
     {
         if (!canChangeItem)
             return;
-        int targetIndex = centerItem.scrollViewItemIndex - 1;
+        int targetIndex = curCenterItem.scrollViewItemIndex - 1;
         if (targetIndex < 0)
             targetIndex = scrollViewItems.Count - 1;
         SetHorizontalTargetItemIndex(targetIndex);
     }
+
+
+    //
+    // Test for the scroll view click left or right button behavior.
+    // Changing horizontalTargetValue will time for looking the scroll view in running.
+    // 
+
+    //private bool isInTesting = false;
+    //public int clickCount = 0;
+    //IEnumerator _StartTest()
+    //{
+    //    yield return new WaitForSeconds(2.0f);
+    //    Debug.Log("## Begin scroll view test ##");
+    //    while (true)
+    //    {
+    //        canChangeItem = true;
+    //        yield return new WaitForSeconds(0.2f);
+    //        clickCount++;
+    //        this.OnBtnLeftClick();
+    //        Debug.Log("### hello world ###" + clickCount);
+    //    }
+    //}
 }
