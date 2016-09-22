@@ -49,7 +49,7 @@ public class EnhanceItem : MonoBehaviour
         targetPos.x = xValue;
         targetPos.y = yValue;
 
-        // Set the 
+        // Set the "depth" of item
         // targetPos.z = depthValue;
         if (mTexture.depth != (int)Mathf.Abs(depthValue))
             mTexture.depth = (int)Mathf.Abs(depthValue);
