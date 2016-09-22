@@ -63,12 +63,12 @@ public class EnhancelScrollView : MonoBehaviour
         if (scrollViewItems.Count % 2 == 0)
             mCenterIndex = scrollViewItems.Count / 2 - 1;
 
+        dHorizontalValues[mCenterIndex] = 0.0f;
         for (int i = 0; i < scrollViewItems.Count; i++)
         {
             scrollViewItems[i].scrollViewItemIndex = i;
             dHorizontalValues[i] = dFactor * (mCenterIndex - i);
-            dHorizontalValues[mCenterIndex] = 0.0f;
-            scrollViewItems[i].SetSelectColor(false);
+            scrollViewItems[i].SetSelectState(false);
             Debug.Log("## value " + dFactor * (mCenterIndex - i));
         }
 
@@ -100,9 +100,9 @@ public class EnhancelScrollView : MonoBehaviour
         {
             mCurrentDuration = lerpDuration;
             if (curCenterItem != null)
-                curCenterItem.SetSelectColor(true);
+                curCenterItem.SetSelectState(true);
             if (preCenterItem != null)
-                preCenterItem.SetSelectColor(false);
+                preCenterItem.SetSelectState(false);
             canChangeItem = true;
         }
 

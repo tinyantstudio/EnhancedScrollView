@@ -53,14 +53,13 @@ public class EnhanceItem : MonoBehaviour
         mTrs.localScale = targetScale;
     }
 
-    public void SetSelectColor(bool isCenter)
+    public void SetSelectState(bool isCenter)
     {
         if (mTexture == null)
             mTexture = this.GetComponent<UITexture>();
-
-        //if (isCenter)
-        //    mTexture.color = Color.white;
-        //else
-        //    mTexture.color = Color.gray;
+        if (isCenter)
+            mTexture.color = Color.white;
+        else
+            mTexture.color = Color.gray;
     }
 }
