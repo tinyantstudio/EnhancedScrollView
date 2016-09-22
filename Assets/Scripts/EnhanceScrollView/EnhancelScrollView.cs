@@ -17,8 +17,10 @@ public class EnhancelScrollView : MonoBehaviour
     // vertical fixed position value 
     public float yFixedPositionValue = 46.0f;
 
-    // targets in scroll view
-    public List<EnhanceItem> scrollViewItems;
+    // Lerp duration
+    public float lerpDuration = 0.2f;
+    private float mCurrentDuration = 0.0f;
+    private int mCenterIndex = 0;
 
     // center and preCentered item
     private EnhanceItem curCenterItem;
@@ -29,22 +31,23 @@ public class EnhancelScrollView : MonoBehaviour
     private float dFactor = 0.2f;
 
     // each item's horizontal value offset
-    private float[] dHorizontalValues;
+    private float[] dCurveOffSets;
 
     // originHorizontalValue Lerp to horizontalTargetValue
     private float cachedHorizontalValue = 0.0f;
     private float originHorizontalValue = 0.1f;
-    public float horizontalTargetValue = 0.5f;
+    private float horizontalTargetValue = 0.5f;
 
-    // Lerp duration
-    public float lerpDuration = 0.2f;
-    private float mCurrentDuration = 0.0f;
-    private int mCenterIndex = 0;
+    // "depth" factor
+    private int depthFactor = 20;
+
+    // targets enhance item in scroll view
+    public List<EnhanceItem> listEnhanceItems;
 
     private static EnhancelScrollView instance;
-    public static EnhancelScrollView GetInstance()
+    public static EnhancelScrollView GetInstance
     {
-        return instance;
+        get { return instance; }
     }
 
     void Awake()
@@ -54,42 +57,45 @@ public class EnhancelScrollView : MonoBehaviour
 
     void Start()
     {
-        dFactor = (Mathf.RoundToInt((1f / scrollViewItems.Count) * 10000f)) * 0.0001f;
+        int enhanceItemCount = listEnhanceItems.Count;
+        dFactor = (Mathf.RoundToInt((1f / enhanceItemCount) * 10000f)) * 0.0001f;
         Debug.Log("## calculate factor : " + dFactor);
 
-        if (dHorizontalValues == null)
-            dHorizontalValues = new float[scrollViewItems.Count];
-        mCenterIndex = scrollViewItems.Count / 2;
-        if (scrollViewItems.Count % 2 == 0)
-            mCenterIndex = scrollViewItems.Count / 2 - 1;
+        if (dCurveOffSets == null)
+            dCurveOffSets = new float[enhanceItemCount];
+        mCenterIndex = enhanceItemCount / 2;
+        if (enhanceItemCount % 2 == 0)
+            mCenterIndex = enhanceItemCount / 2 - 1;
 
-        dHorizontalValues[mCenterIndex] = 0.0f;
-        for (int i = 0; i < scrollViewItems.Count; i++)
+        dCurveOffSets[mCenterIndex] = 0.0f;
+        for (int i = 0; i < enhanceItemCount; i++)
         {
-            scrollViewItems[i].scrollViewItemIndex = i;
-            dHorizontalValues[i] = dFactor * (mCenterIndex - i);
-            scrollViewItems[i].SetSelectState(false);
-            Debug.Log("## value " + dFactor * (mCenterIndex - i));
+            listEnhanceItems[i].CurveOffSetIndex = i;
+            dCurveOffSets[i] = dFactor * (mCenterIndex - i);
+            listEnhanceItems[i].SetSelectState(false);
         }
 
-        curCenterItem = scrollViewItems[mCenterIndex];
+        curCenterItem = listEnhanceItems[mCenterIndex];
         canChangeItem = true;
         cachedHorizontalValue = Mathf.Lerp(originHorizontalValue, horizontalTargetValue, 1.0f);
         originHorizontalValue = horizontalTargetValue;
         UpdateEnhanceScrollView(cachedHorizontalValue);
-        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.scrollViewItems);
+        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
         SortViewItem(tmpList);
     }
 
+    /// 
+    /// Update EnhanceItem state with curve fTime value
+    /// 
     public void UpdateEnhanceScrollView(float fValue)
     {
-        for (int i = 0; i < scrollViewItems.Count; i++)
+        for (int i = 0; i < listEnhanceItems.Count; i++)
         {
-            EnhanceItem itemScript = scrollViewItems[i];
-            float xValue = GetXPosValue(fValue, dHorizontalValues[itemScript.scrollViewItemIndex]);
-            float scaleValue = GetScaleValue(fValue, dHorizontalValues[itemScript.scrollViewItemIndex]);
-            float zValue = depthCurve.Evaluate(fValue + dHorizontalValues[itemScript.scrollViewItemIndex]);
-            itemScript.UpdateScrollViewItems(xValue, -zValue * 50, yFixedPositionValue, scaleValue);
+            EnhanceItem itemScript = listEnhanceItems[i];
+            float xValue = GetXPosValue(fValue, dCurveOffSets[itemScript.CurveOffSetIndex]);
+            float scaleValue = GetScaleValue(fValue, dCurveOffSets[itemScript.CurveOffSetIndex]);
+            float depthValue = depthCurve.Evaluate(fValue + dCurveOffSets[itemScript.CurveOffSetIndex]);
+            itemScript.UpdateScrollViewItems(xValue, -depthValue * depthFactor, yFixedPositionValue, scaleValue);
         }
     }
 
@@ -130,7 +136,7 @@ public class EnhancelScrollView : MonoBehaviour
     static public int SortPosition(EnhanceItem a, EnhanceItem b) { return a.transform.localPosition.x.CompareTo(b.transform.localPosition.x); }
     private int GetMoveCurveFactorCount(EnhanceItem item)
     {
-        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.scrollViewItems);
+        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
         SortViewItem(tmpList);
         int factorCount = Mathf.Abs(item.RealIndex) - Mathf.Abs(mCenterIndex);
         return Mathf.Abs(factorCount);
@@ -153,33 +159,35 @@ public class EnhancelScrollView : MonoBehaviour
             items[i].RealIndex = i;
     }
 
-    public void SetHorizontalTargetItemIndex(int itemIndex)
+    public void SetHorizontalTargetItemIndex(EnhanceItem selectItem)
     {
         if (!canChangeItem)
             return;
 
-        EnhanceItem item = scrollViewItems[itemIndex];
-        if (curCenterItem == item)
+        if (curCenterItem == selectItem)
             return;
 
         canChangeItem = false;
         preCenterItem = curCenterItem;
-        curCenterItem = item;
+        curCenterItem = selectItem;
 
         // calculate the direction of moving
         float centerXValue = positionCurve.Evaluate(0.5f) * posCurveFactor;
         bool isRight = false;
-        if (item.transform.localPosition.x > centerXValue)
+        if (selectItem.transform.localPosition.x > centerXValue)
             isRight = true;
 
         // calculate the offset * dFactor
-        int moveIndexCount = GetMoveCurveFactorCount(item);
+        int moveIndexCount = GetMoveCurveFactorCount(selectItem);
         float dvalue = 0.0f;
         if (isRight)
+        {
             dvalue = -dFactor * moveIndexCount;
+        }
         else
+        {
             dvalue = dFactor * moveIndexCount;
-
+        }
         horizontalTargetValue += dvalue;
         mCurrentDuration = 0.0f;
         originHorizontalValue = cachedHorizontalValue;
@@ -190,10 +198,10 @@ public class EnhancelScrollView : MonoBehaviour
     {
         if (!canChangeItem)
             return;
-        int targetIndex = curCenterItem.scrollViewItemIndex + 1;
-        if (targetIndex > scrollViewItems.Count - 1)
+        int targetIndex = curCenterItem.CurveOffSetIndex + 1;
+        if (targetIndex > listEnhanceItems.Count - 1)
             targetIndex = 0;
-        SetHorizontalTargetItemIndex(targetIndex);
+        SetHorizontalTargetItemIndex(listEnhanceItems[targetIndex]);
     }
 
     // Click the left button the select next next item.
@@ -201,10 +209,10 @@ public class EnhancelScrollView : MonoBehaviour
     {
         if (!canChangeItem)
             return;
-        int targetIndex = curCenterItem.scrollViewItemIndex - 1;
+        int targetIndex = curCenterItem.CurveOffSetIndex - 1;
         if (targetIndex < 0)
-            targetIndex = scrollViewItems.Count - 1;
-        SetHorizontalTargetItemIndex(targetIndex);
+            targetIndex = listEnhanceItems.Count - 1;
+        SetHorizontalTargetItemIndex(listEnhanceItems[targetIndex]);
     }
 
 

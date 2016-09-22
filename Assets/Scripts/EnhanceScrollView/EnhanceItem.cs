@@ -3,23 +3,23 @@ using System.Collections;
 
 public class EnhanceItem : MonoBehaviour
 {
-
-    // 在ScrollViewitem中的索引
-    // 定位当前的位置和缩放
-    public int scrollViewItemIndex = 0;
-    public bool inRightArea = false;
-
-    private Vector3 targetPos = Vector3.one;
-    private Vector3 targetScale = Vector3.one;
-
-    private Transform mTrs;
-    private UITexture mTexture;
+    // get the right offset factor
+    private int curveOffSetIndex = 0;
+    public int CurveOffSetIndex
+    {
+        get { return this.curveOffSetIndex; }
+        set { this.curveOffSetIndex = value; }
+    }
     private int curRealIndex = 0;
     public int RealIndex
     {
         get { return this.curRealIndex; }
         set { this.curRealIndex = value; }
     }
+
+    public bool inRightArea = false;
+    private Transform mTrs;
+    private UITexture mTexture;
 
     void Awake()
     {
@@ -32,27 +32,34 @@ public class EnhanceItem : MonoBehaviour
         UIEventListener.Get(this.gameObject).onClick = OnClickScrollViewItem;
     }
 
-    // 当点击Item，将该item移动到中间位置
+    // Select the item
     private void OnClickScrollViewItem(GameObject obj)
     {
-        EnhancelScrollView.GetInstance().SetHorizontalTargetItemIndex(scrollViewItemIndex);
+        EnhancelScrollView.GetInstance.SetHorizontalTargetItemIndex(this);
     }
 
-    /// <summary>
-    /// 更新该Item的缩放和位移
-    /// </summary>
-    public void UpdateScrollViewItems(float xValue, float zPosValue, float yValue, float scaleValue)
+    // Update Item's status
+    // 1. position
+    // 2. scale
+    // 3. "depth" is 2D or z Position in 3D to set the front and back item
+    public void UpdateScrollViewItems(float xValue, float depthValue, float yValue, float scaleValue)
     {
+        Vector3 targetPos = Vector3.one;
+        Vector3 targetScale = Vector3.one;
         targetPos.x = xValue;
         targetPos.y = yValue;
-        // targetPos.z = zPosValue;
-        mTexture.depth = (int)Mathf.Abs(zPosValue);
+
+        // Set the 
+        // targetPos.z = depthValue;
+        if (mTexture.depth != (int)Mathf.Abs(depthValue))
+            mTexture.depth = (int)Mathf.Abs(depthValue);
         targetScale.x = targetScale.y = scaleValue;
 
         mTrs.localPosition = targetPos;
         mTrs.localScale = targetScale;
     }
 
+    // Set the item center state
     public void SetSelectState(bool isCenter)
     {
         if (mTexture == null)
