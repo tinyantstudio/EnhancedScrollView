@@ -113,9 +113,6 @@ public class EnhanceScrollView : MonoBehaviour
         canChangeItem = true;
 
         LerpTweenToTarget(0f, targetHorizontalValue, false);
-        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
-        SortViewItem(tmpList);
-
         // enable the drag action
         // EnableDrag(true);
     }
@@ -126,6 +123,8 @@ public class EnhanceScrollView : MonoBehaviour
         {
             originHorizontalValue = targetValue;
             UpdateEnhanceScrollView(targetValue);
+            List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
+            SortViewItem(tmpList);
         }
         else
         {
