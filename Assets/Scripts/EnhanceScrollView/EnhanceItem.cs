@@ -35,7 +35,7 @@ public class EnhanceItem : MonoBehaviour
     // Select the item
     private void OnClickScrollViewItem(GameObject obj)
     {
-        EnhancelScrollView.GetInstance.SetHorizontalTargetItemIndex(this);
+        EnhanceScrollView.GetInstance.SetHorizontalTargetItemIndex(this);
     }
 
     // Update Item's status
