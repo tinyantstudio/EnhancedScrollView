@@ -35,7 +35,6 @@ public class EnhanceScrollView : MonoBehaviour
     private float dFactor = 0.2f;
 
     // originHorizontalValue Lerp to horizontalTargetValue
-    // private float cachedHorizontalValue = 0.0f;
     private float originHorizontalValue = 0.1f;
     public float targetHorizontalValue = 0.5f;
 
@@ -89,8 +88,6 @@ public class EnhanceScrollView : MonoBehaviour
         canChangeItem = true;
         int enhanceItemCount = listEnhanceItems.Count;
         dFactor = (Mathf.RoundToInt((1f / enhanceItemCount) * 10000f)) * 0.0001f;
-        //if (dCurveOffSets == null)
-        //    dCurveOffSets = new float[enhanceItemCount];
         mCenterIndex = enhanceItemCount / 2;
         if (enhanceItemCount % 2 == 0)
             mCenterIndex = enhanceItemCount / 2 - 1;
