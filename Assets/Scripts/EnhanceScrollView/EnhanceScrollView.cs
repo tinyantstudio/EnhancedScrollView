@@ -13,6 +13,9 @@ public class EnhanceScrollView : MonoBehaviour
     // 1. In NGUI set the widget's depth may cause performance problem
     // 2. If you use 3D UI just set the Item's Z position
     public AnimationCurve depthCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
+    // The start center index
+    [Tooltip("The Start center index")]
+    public int startCenterIndex = 0;
     public float posCurveFactor = 500.0f;
     // vertical fixed position value 
     public float yFixedPositionValue = 46.0f;
@@ -30,9 +33,6 @@ public class EnhanceScrollView : MonoBehaviour
     // if we can change the target item
     private bool canChangeItem = true;
     private float dFactor = 0.2f;
-
-    // each item's horizontal value offset
-    private float[] dCurveOffSets;
 
     // originHorizontalValue Lerp to horizontalTargetValue
     // private float cachedHorizontalValue = 0.0f;
@@ -86,32 +86,35 @@ public class EnhanceScrollView : MonoBehaviour
 
     void Start()
     {
+        canChangeItem = true;
         int enhanceItemCount = listEnhanceItems.Count;
         dFactor = (Mathf.RoundToInt((1f / enhanceItemCount) * 10000f)) * 0.0001f;
-        Debug.Log("## calculate factor : " + dFactor);
-
-        if (dCurveOffSets == null)
-            dCurveOffSets = new float[enhanceItemCount];
+        //if (dCurveOffSets == null)
+        //    dCurveOffSets = new float[enhanceItemCount];
         mCenterIndex = enhanceItemCount / 2;
         if (enhanceItemCount % 2 == 0)
             mCenterIndex = enhanceItemCount / 2 - 1;
+        Debug.Log("## calculate factor : " + dFactor + " CenterIndex :" + mCenterIndex);
 
-        dCurveOffSets[mCenterIndex] = 0.0f;
         for (int i = 0; i < enhanceItemCount; i++)
         {
             listEnhanceItems[i].CurveOffSetIndex = i;
-            dCurveOffSets[i] = dFactor * (mCenterIndex - i);
+            listEnhanceItems[i].CenterOffSet = dFactor * (mCenterIndex - i);
             listEnhanceItems[i].SetSelectState(false);
-
             GameObject obj = listEnhanceItems[i].gameObject;
             DragEnhanceView script = obj.GetComponent<DragEnhanceView>();
             if (script != null)
                 script.SetScrollView(this);
         }
 
-        curCenterItem = listEnhanceItems[mCenterIndex];
-        canChangeItem = true;
-
+        // set the center item with startCenterIndex
+        if (startCenterIndex < 0 || startCenterIndex >= listEnhanceItems.Count)
+        {
+            Debug.LogError("## startCenterIndex < 0 || startCenterIndex >= listEnhanceItems.Count  out of index ##");
+            startCenterIndex = mCenterIndex;
+        }
+        curCenterItem = listEnhanceItems[startCenterIndex];
+        targetHorizontalValue = 0.5f - curCenterItem.CenterOffSet;
         LerpTweenToTarget(0f, targetHorizontalValue, false);
         // enable the drag action
         // EnableDrag(true);
@@ -121,10 +124,10 @@ public class EnhanceScrollView : MonoBehaviour
     {
         if (!needTween)
         {
-            originHorizontalValue = targetValue;
-            UpdateEnhanceScrollView(targetValue);
             List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
             SortViewItem(tmpList);
+            originHorizontalValue = targetValue;
+            UpdateEnhanceScrollView(targetValue);
         }
         else
         {
@@ -147,17 +150,17 @@ public class EnhanceScrollView : MonoBehaviour
         for (int i = 0; i < listEnhanceItems.Count; i++)
         {
             EnhanceItem itemScript = listEnhanceItems[i];
-            float xValue = GetXPosValue(fValue, dCurveOffSets[itemScript.CurveOffSetIndex]);
-            float scaleValue = GetScaleValue(fValue, dCurveOffSets[itemScript.CurveOffSetIndex]);
-            float depthValue = depthCurve.Evaluate(fValue + dCurveOffSets[itemScript.CurveOffSetIndex]);
+            float xValue = GetXPosValue(fValue, itemScript.CenterOffSet);
+            float scaleValue = GetScaleValue(fValue, itemScript.CenterOffSet);
+            float depthValue = depthCurve.Evaluate(fValue + itemScript.CenterOffSet);
             itemScript.UpdateScrollViewItems(xValue, -depthValue * depthFactor, yFixedPositionValue, scaleValue);
         }
     }
 
     void Update()
     {
-        if (enableLerpTween)
-            TweenViewToTarget();
+        // if (enableLerpTween)
+        TweenViewToTarget();
     }
 
     private void TweenViewToTarget()
@@ -166,16 +169,21 @@ public class EnhanceScrollView : MonoBehaviour
         if (mCurrentDuration > lerpDuration)
         {
             mCurrentDuration = lerpDuration;
-            if (curCenterItem != null)
-                curCenterItem.SetSelectState(true);
-            if (preCenterItem != null)
-                preCenterItem.SetSelectState(false);
             canChangeItem = true;
+            OnTweenOver();
         }
 
         float percent = mCurrentDuration / lerpDuration;
         float value = Mathf.Lerp(originHorizontalValue, targetHorizontalValue, percent);
         UpdateEnhanceScrollView(value);
+    }
+
+    private void OnTweenOver()
+    {
+        if (curCenterItem != null)
+            curCenterItem.SetSelectState(true);
+        if (preCenterItem != null)
+            preCenterItem.SetSelectState(false);
     }
 
     // Get the evaluate value to set item's scale
@@ -193,22 +201,12 @@ public class EnhanceScrollView : MonoBehaviour
         return evaluateValue;
     }
 
-    private int GetMoveCurveFactorCount(EnhanceItem item)
+    private int GetMoveCurveFactorCount(EnhanceItem preCenterItem, EnhanceItem newCenterItem)
     {
         List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
         SortViewItem(tmpList);
-        int factorCount = Mathf.Abs(item.RealIndex) - Mathf.Abs(mCenterIndex);
+        int factorCount = Mathf.Abs(newCenterItem.RealIndex) - Mathf.Abs(preCenterItem.RealIndex);
         return Mathf.Abs(factorCount);
-
-        // Testing code
-        // Debug.Log("## Move factor count is " + factorCount + "  " + mCenterIndex + "  realIndex " + item.RealIndex);
-        //float targetXPos = item.transform.localPosition.x;
-        //for (int i = 0; i < scrollViewItems.Count; i++)
-        //{
-        //    float factor = (0.5f - dFactor * (mCenterIndex - i));
-        //    float tempPosX = positionCurve.Evaluate(factor) * posCurveFactor;
-        //    // Debug.Log(string.Format("factor:{0}, tempPosx:{1}, dis:{2}.", factor, tempPosX, Mathf.Abs(targetXPos - tempPosX)));
-        //}
     }
 
     // sort item with X so we can know how much distance we need to move the timeLine(curve time line)
@@ -239,7 +237,7 @@ public class EnhanceScrollView : MonoBehaviour
             isRight = true;
 
         // calculate the offset * dFactor
-        int moveIndexCount = GetMoveCurveFactorCount(selectItem);
+        int moveIndexCount = GetMoveCurveFactorCount(preCenterItem, selectItem);
         float dvalue = 0.0f;
         if (isRight)
         {
@@ -280,6 +278,8 @@ public class EnhanceScrollView : MonoBehaviour
     // On Drag Move
     public void OnDragEnhanceViewMove(Vector2 delta)
     {
+        // In developing
+        return;
         if (Mathf.Abs(delta.x) > 0.0f)
         {
             targetHorizontalValue += delta.x * factor;

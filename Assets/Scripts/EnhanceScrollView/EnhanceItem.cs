@@ -3,21 +3,29 @@ using System.Collections;
 
 public class EnhanceItem : MonoBehaviour
 {
-    // get the right offset factor
+    // Start index
     private int curveOffSetIndex = 0;
     public int CurveOffSetIndex
     {
         get { return this.curveOffSetIndex; }
         set { this.curveOffSetIndex = value; }
     }
-    private int curRealIndex = 0;
+
+    // Runtime real index(Be calculated in runtime)
+    public int curRealIndex = 0;
     public int RealIndex
     {
         get { return this.curRealIndex; }
         set { this.curRealIndex = value; }
     }
 
-    public bool inRightArea = false;
+    // Curve center offset 
+    public float dCurveCenterOffset = 0.0f;
+    public float CenterOffSet
+    {
+        get { return this.dCurveCenterOffset; }
+        set { dCurveCenterOffset = value; }
+    }
     private Transform mTrs;
     private UITexture mTexture;
 
