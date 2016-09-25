@@ -16,7 +16,9 @@ public class EnhanceScrollView : MonoBehaviour
     // The start center index
     [Tooltip("The Start center index")]
     public int startCenterIndex = 0;
-    public float posCurveFactor = 500.0f;
+    // Offset width between item
+    public float cellWidth = 10f;
+    private float totalHorizontalWidth = 500.0f;
     // vertical fixed position value 
     public float yFixedPositionValue = 46.0f;
 
@@ -86,14 +88,13 @@ public class EnhanceScrollView : MonoBehaviour
     void Start()
     {
         canChangeItem = true;
-        int enhanceItemCount = listEnhanceItems.Count;
-        dFactor = (Mathf.RoundToInt((1f / enhanceItemCount) * 10000f)) * 0.0001f;
-        mCenterIndex = enhanceItemCount / 2;
-        if (enhanceItemCount % 2 == 0)
-            mCenterIndex = enhanceItemCount / 2 - 1;
-        Debug.Log("## calculate factor : " + dFactor + " CenterIndex :" + mCenterIndex);
-
-        for (int i = 0; i < enhanceItemCount; i++)
+        int count = listEnhanceItems.Count;
+        dFactor = (Mathf.RoundToInt((1f / count) * 10000f)) * 0.0001f;
+        mCenterIndex = count / 2;
+        if (count % 2 == 0)
+            mCenterIndex = count / 2 - 1;
+        // Debug.Log("## calculate factor : " + dFactor + " CenterIndex :" + mCenterIndex);
+        for (int i = 0; i < count; i++)
         {
             listEnhanceItems[i].CurveOffSetIndex = i;
             listEnhanceItems[i].CenterOffSet = dFactor * (mCenterIndex - i);
@@ -110,6 +111,7 @@ public class EnhanceScrollView : MonoBehaviour
             Debug.LogError("## startCenterIndex < 0 || startCenterIndex >= listEnhanceItems.Count  out of index ##");
             startCenterIndex = mCenterIndex;
         }
+        totalHorizontalWidth = cellWidth * count;
         curCenterItem = listEnhanceItems[startCenterIndex];
         targetHorizontalValue = 0.5f - curCenterItem.CenterOffSet;
         LerpTweenToTarget(0f, targetHorizontalValue, false);
@@ -190,11 +192,10 @@ public class EnhanceScrollView : MonoBehaviour
         return scaleValue;
     }
 
-
     // Get the X value set the Item's position
     private float GetXPosValue(float sliderValue, float added)
     {
-        float evaluateValue = positionCurve.Evaluate(sliderValue + added) * posCurveFactor;
+        float evaluateValue = positionCurve.Evaluate(sliderValue + added) * totalHorizontalWidth;
         return evaluateValue;
     }
 
@@ -228,7 +229,7 @@ public class EnhanceScrollView : MonoBehaviour
         curCenterItem = selectItem;
 
         // calculate the direction of moving
-        float centerXValue = positionCurve.Evaluate(0.5f) * posCurveFactor;
+        float centerXValue = positionCurve.Evaluate(0.5f) * totalHorizontalWidth;
         bool isRight = false;
         if (selectItem.transform.localPosition.x > centerXValue)
             isRight = true;
