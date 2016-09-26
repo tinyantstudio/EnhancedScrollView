@@ -14,4 +14,10 @@ public class DragEnhanceView : MonoBehaviour
         if (enhanceScrollView != null)
             enhanceScrollView.OnDragEnhanceViewMove(delta);
     }
+
+    void OnEnhaneViewDragEnd()
+    {
+        if (enhanceScrollView != null)
+            enhanceScrollView.OnDragEnhanceViewEnd();
+    }
 }

@@ -9,13 +9,12 @@ public class EnhanceScrollViewDragController : MonoBehaviour
 
     private Camera targetCamera;
     private int rayCastMask = 0;
+    private bool dragStart = false;
 
     public void SetTargetCameraAndMask(Camera camera, int mask)
     {
         this.targetCamera = camera;
         this.rayCastMask = mask;
-
-        Debug.Log("## set target camera and mask ##");
     }
 
     void Update()
@@ -29,6 +28,9 @@ public class EnhanceScrollViewDragController : MonoBehaviour
 #endif
     }
 
+    /// <summary>
+    /// Process Mouse Input
+    /// </summary>
     private void ProcessMouseInput()
     {
         if (Input.GetMouseButtonDown(0))
@@ -46,15 +48,66 @@ public class EnhanceScrollViewDragController : MonoBehaviour
             cachedPosition.x = Input.mousePosition.x;
             cachedPosition.y = Input.mousePosition.y;
             Vector2 delta = cachedPosition - lastPosition;
-            // Notify target
-            dragTarget.SendMessage("OnEnhanceViewDrag", delta, SendMessageOptions.DontRequireReceiver);
+            if (!dragStart && delta.sqrMagnitude != 0f)
+                dragStart = true;
+
+            if (dragStart)
+            {
+                // Notify target
+                dragTarget.SendMessage("OnEnhanceViewDrag", delta, SendMessageOptions.DontRequireReceiver);
+            }
             lastPosition = cachedPosition;
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            if (dragTarget != null && dragStart)
+            {
+                dragTarget.SendMessage("OnEnhaneViewDragEnd", SendMessageOptions.DontRequireReceiver);
+            }
+            dragTarget = null;
+            dragStart = false;
         }
     }
 
+    /// <summary>
+    /// Process Touch input
+    /// </summary>
     private void ProcessTouchInput()
     {
-
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                if (targetCamera == null)
+                    return;
+                dragTarget = RayCast(this.targetCamera, Input.mousePosition);
+            }
+            else if (touch.phase == TouchPhase.Moved)
+            {
+                if (dragTarget == null)
+                    return;
+                if (!dragStart && touch.deltaPosition.sqrMagnitude != 0f)
+                {
+                    dragStart = true;
+                }
+                if (dragStart)
+                {
+                    // Notify target
+                    dragTarget.SendMessage("OnEnhanceViewDrag", touch.deltaPosition, SendMessageOptions.DontRequireReceiver);
+                }
+            }
+            else if (touch.phase == TouchPhase.Ended)
+            {
+                if (dragTarget != null && dragStart)
+                {
+                    dragTarget.SendMessage("OnEnhaneViewDragEnd", SendMessageOptions.DontRequireReceiver);
+                }
+                dragTarget = null;
+                dragStart = false;
+            }
+        }
     }
 
     public GameObject RayCast(Camera cam, Vector3 inPos)
