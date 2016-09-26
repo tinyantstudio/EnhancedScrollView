@@ -21,15 +21,44 @@ Using Unity3d's AnimationCurve to finish this EnhancedScrollView.AnimationCurve 
 3. ......
 
 ## How to use 
-
+Easy to make your own Enhance Item
 <pre><code>
-YourItem: EnhanceItem
+/// 
+/// NGUI Enhance item example
+/// 
+public class MyNGUIEnhanceItem : EnhanceItem
 {
-    // 
-    // your item logic
-    // click and other scrollview logic was done in EnhanceItem    
-    // 
+    private UITexture mTexture;
+
+    protected override void OnAwake()
+    {
+        this.mTexture = GetComponent<UITexture>();
+    }
+
+    // Set the item "depth" 2d or 3d
+    protected override void SetItemDepth(float depthValue)
+    {
+        if (mTexture.depth != (int)Mathf.Abs(depthValue))
+            mTexture.depth = (int)Mathf.Abs(depthValue);
+    }
+
+    // Item is centered
+    public override void SetSelectState(bool isCenter)
+    {
+        if (mTexture == null)
+            mTexture = this.GetComponent<UITexture>();
+        if (isCenter)
+            mTexture.color = Color.white;
+        else
+            mTexture.color = Color.gray;
+    }
+
+    protected override void OnClickItem()
+    {
+        // item was clicked
+    }
 }
+
 </code></pre>
 
 ## ScreenShot

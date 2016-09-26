@@ -12,7 +12,7 @@ public class EnhanceItem : MonoBehaviour
     }
 
     // Runtime real index(Be calculated in runtime)
-    public int curRealIndex = 0;
+    private int curRealIndex = 0;
     public int RealIndex
     {
         get { return this.curRealIndex; }
@@ -20,24 +20,26 @@ public class EnhanceItem : MonoBehaviour
     }
 
     // Curve center offset 
-    public float dCurveCenterOffset = 0.0f;
+    private float dCurveCenterOffset = 0.0f;
     public float CenterOffSet
     {
         get { return this.dCurveCenterOffset; }
         set { dCurveCenterOffset = value; }
     }
     private Transform mTrs;
-    private UITexture mTexture;
 
     void Awake()
     {
         mTrs = this.transform;
-        mTexture = this.GetComponent<UITexture>();
+        OnAwake();
     }
 
     void Start()
     {
+        // Use NGUI's ui click event system
+        // You can UGUI or 3D collider click event system
         UIEventListener.Get(this.gameObject).onClick = OnClickScrollViewItem;
+        OnStart();
     }
 
     // Select the item
@@ -45,10 +47,6 @@ public class EnhanceItem : MonoBehaviour
     {
         EnhanceScrollView.GetInstance.SetHorizontalTargetItemIndex(this);
         OnClickItem();
-    }
-
-    protected virtual void OnClickItem()
-    {
     }
 
     // Update Item's status
@@ -59,27 +57,37 @@ public class EnhanceItem : MonoBehaviour
     {
         Vector3 targetPos = Vector3.one;
         Vector3 targetScale = Vector3.one;
+        // position
         targetPos.x = xValue;
         targetPos.y = yValue;
+        mTrs.localPosition = targetPos;
 
         // Set the "depth" of item
         // targetPos.z = depthValue;
-        if (mTexture.depth != (int)Mathf.Abs(depthValue))
-            mTexture.depth = (int)Mathf.Abs(depthValue);
+        SetItemDepth(depthValue);
+        // scale
         targetScale.x = targetScale.y = scaleValue;
-
-        mTrs.localPosition = targetPos;
         mTrs.localScale = targetScale;
+    }
+
+    protected virtual void OnClickItem()
+    {
+    }
+
+    protected virtual void OnStart()
+    {
+    }
+
+    protected virtual void OnAwake()
+    {
+    }
+
+    protected virtual void SetItemDepth(float depthValue)
+    {
     }
 
     // Set the item center state
     public virtual void SetSelectState(bool isCenter)
     {
-        if (mTexture == null)
-            mTexture = this.GetComponent<UITexture>();
-        if (isCenter)
-            mTexture.color = Color.white;
-        else
-            mTexture.color = Color.gray;
     }
 }

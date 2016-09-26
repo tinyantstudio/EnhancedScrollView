@@ -301,7 +301,7 @@ public class EnhanceScrollView : MonoBehaviour
         float tmp = 0.5f * (curHorizontalValue < 0 ? -1 : 1);
         for (int i = 0; i < listEnhanceItems.Count; i++)
         {
-            float dis = Mathf.Abs(Mathf.Abs(value) - Mathf.Abs((tmp - listEnhanceItems[i].dCurveCenterOffset)));
+            float dis = Mathf.Abs(Mathf.Abs(value) - Mathf.Abs((tmp - listEnhanceItems[i].CenterOffSet)));
             if (dis < min)
             {
                 closestIndex = i;
@@ -309,7 +309,7 @@ public class EnhanceScrollView : MonoBehaviour
             }
         }
         originHorizontalValue = curHorizontalValue;
-        float target = ((int)curHorizontalValue + (tmp - listEnhanceItems[closestIndex].dCurveCenterOffset));
+        float target = ((int)curHorizontalValue + (tmp - listEnhanceItems[closestIndex].CenterOffSet));
         preCenterItem = curCenterItem;
         curCenterItem = listEnhanceItems[closestIndex];
         LerpTweenToTarget(originHorizontalValue, target, true);
