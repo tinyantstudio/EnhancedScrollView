@@ -73,6 +73,8 @@ public class EnhanceScrollView : MonoBehaviour
 
     // targets enhance item in scroll view
     public List<EnhanceItem> listEnhanceItems;
+    // sort to get right index
+    private List<EnhanceItem> listSortedItems = new List<EnhanceItem>();
 
     private static EnhanceScrollView instance;
     public static EnhanceScrollView GetInstance
@@ -114,12 +116,17 @@ public class EnhanceScrollView : MonoBehaviour
             Debug.LogError("## startCenterIndex < 0 || startCenterIndex >= listEnhanceItems.Count  out of index ##");
             startCenterIndex = mCenterIndex;
         }
+
+        // sorted items
+        listSortedItems = new List<EnhanceItem>(listEnhanceItems.ToArray());
         totalHorizontalWidth = cellWidth * count;
         curCenterItem = listEnhanceItems[startCenterIndex];
         curHorizontalValue = 0.5f - curCenterItem.CenterOffSet;
         LerpTweenToTarget(0f, curHorizontalValue, false);
 
+        // 
         // enable the drag actions
+        // 
         EnableDrag(true);
     }
 
@@ -127,8 +134,7 @@ public class EnhanceScrollView : MonoBehaviour
     {
         if (!needTween)
         {
-            List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
-            SortViewItem(tmpList);
+            SortEnhanceItem();
             originHorizontalValue = targetValue;
             UpdateEnhanceScrollView(targetValue);
             this.OnTweenOver();
@@ -209,19 +215,18 @@ public class EnhanceScrollView : MonoBehaviour
 
     private int GetMoveCurveFactorCount(EnhanceItem preCenterItem, EnhanceItem newCenterItem)
     {
-        List<EnhanceItem> tmpList = new List<EnhanceItem>(this.listEnhanceItems);
-        SortViewItem(tmpList);
+        SortEnhanceItem();
         int factorCount = Mathf.Abs(newCenterItem.RealIndex) - Mathf.Abs(preCenterItem.RealIndex);
         return Mathf.Abs(factorCount);
     }
 
     // sort item with X so we can know how much distance we need to move the timeLine(curve time line)
     static public int SortPosition(EnhanceItem a, EnhanceItem b) { return a.transform.localPosition.x.CompareTo(b.transform.localPosition.x); }
-    private void SortViewItem(List<EnhanceItem> items)
+    private void SortEnhanceItem()
     {
-        items.Sort(SortPosition);
-        for (int i = items.Count - 1; i >= 0; i--)
-            items[i].RealIndex = i;
+        listSortedItems.Sort(SortPosition);
+        for (int i = listSortedItems.Count - 1; i >= 0; i--)
+            listSortedItems[i].RealIndex = i;
     }
 
     public void SetHorizontalTargetItemIndex(EnhanceItem selectItem)
