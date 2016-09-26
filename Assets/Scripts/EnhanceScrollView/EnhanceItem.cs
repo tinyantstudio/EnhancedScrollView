@@ -44,6 +44,11 @@ public class EnhanceItem : MonoBehaviour
     private void OnClickScrollViewItem(GameObject obj)
     {
         EnhanceScrollView.GetInstance.SetHorizontalTargetItemIndex(this);
+        OnClickItem();
+    }
+
+    protected virtual void OnClickItem()
+    {
     }
 
     // Update Item's status
@@ -68,7 +73,7 @@ public class EnhanceItem : MonoBehaviour
     }
 
     // Set the item center state
-    public void SetSelectState(bool isCenter)
+    public virtual void SetSelectState(bool isCenter)
     {
         if (mTexture == null)
             mTexture = this.GetComponent<UITexture>();

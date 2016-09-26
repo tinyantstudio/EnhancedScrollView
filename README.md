@@ -20,6 +20,18 @@ Using Unity3d's AnimationCurve to finish this EnhancedScrollView.AnimationCurve 
 2. animation curve editor(you can type the value for the KeyFrame)
 3. ......
 
+## How to use 
+
+<pre><code>
+YourItem: EnhanceItem
+{
+    // 
+    // your item logic
+    // click and other scrollview logic was done in EnhanceItem    
+    // 
+}
+</code></pre>
+
 ## ScreenShot
 ![ScreenShot](https://github.com/tinyantstudio/EnhancedScrollView/blob/master/screenshot.png)
 
