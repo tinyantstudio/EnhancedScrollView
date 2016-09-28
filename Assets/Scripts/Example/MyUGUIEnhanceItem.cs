@@ -7,9 +7,8 @@ public class MyUGUIEnhanceItem : EnhanceItem
 {
     private Button uButton;
     private RawImage rawImage;
-    public int curDepth = 0;
 
-    void Start()
+    protected override void OnStart()
     {
         rawImage = GetComponent<RawImage>();
         uButton = GetComponent<Button>();
@@ -24,8 +23,8 @@ public class MyUGUIEnhanceItem : EnhanceItem
     // Set the item "depth" 2d or 3d
     protected override void SetItemDepth(float depthCurveValue, int depthFactor, float itemCount)
     {
-        curDepth = (int)(depthCurveValue * itemCount);
-        this.transform.SetSiblingIndex(curDepth);
+        int newDepth = (int)(depthCurveValue * itemCount);
+        this.transform.SetSiblingIndex(newDepth);
     }
 
     public override void SetSelectState(bool isCenter)
