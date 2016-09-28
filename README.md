@@ -30,7 +30,7 @@ Easy to make your own Enhance Item
 1. open NGUIEnhanceScrollView.unity for NGUI example
 2. open UGUIEnhanceScrollView.unity for UGUI example
 
-Easy way to make better Curve: Copy EnhancedScrollView.cs Component and paste it to your own TargetScrollView
+Easy way to make better Curve: Copy EnhancedScrollView Component in example and paste it to your own TargetScrollView
 
 <pre><code>
 /// 
