@@ -4,6 +4,14 @@ using System.Collections.Generic;
 
 public class EnhanceScrollView : MonoBehaviour
 {
+    public enum InputSystemType
+    {
+        NGUIAndWorldInput, // use EnhanceScrollViewDragController.cs to get the input(keyboard and touch)
+        UGUIInput,         // use UDragEnhanceView for each item to get drag event
+    }
+
+    // Input system type(NGUI or 3d world, UGUI)
+    public InputSystemType inputType = InputSystemType.NGUIAndWorldInput;
     // Control the item's scale curve
     public AnimationCurve scaleCurve;
     // Control the position curve
@@ -41,7 +49,7 @@ public class EnhanceScrollView : MonoBehaviour
     public float curHorizontalValue = 0.5f;
 
     // "depth" factor (2d widget depth or 3d Z value)
-    private int depthFactor = 20;
+    private int depthFactor = 5;
 
     // Drag enhance scroll view
     [Tooltip("Camera for drag ray cast")]
@@ -52,17 +60,20 @@ public class EnhanceScrollView : MonoBehaviour
     {
         if (isEnabled)
         {
-            if (sourceCamera == null)
+            if (inputType == InputSystemType.NGUIAndWorldInput)
             {
-                Debug.LogError("## Source Camera for drag scroll view is null ##");
-                return;
-            }
+                if (sourceCamera == null)
+                {
+                    Debug.LogError("## Source Camera for drag scroll view is null ##");
+                    return;
+                }
 
-            if (dragController == null)
-                dragController = gameObject.AddComponent<EnhanceScrollViewDragController>();
-            dragController.enabled = true;
-            // set the camera and mask
-            dragController.SetTargetCameraAndMask(sourceCamera, (1 << LayerMask.NameToLayer("UI")));
+                if (dragController == null)
+                    dragController = gameObject.AddComponent<EnhanceScrollViewDragController>();
+                dragController.enabled = true;
+                // set the camera and mask
+                dragController.SetTargetCameraAndMask(sourceCamera, (1 << LayerMask.NameToLayer("UI")));
+            }
         }
         else
         {
@@ -95,8 +106,6 @@ public class EnhanceScrollView : MonoBehaviour
         mCenterIndex = count / 2;
         if (count % 2 == 0)
             mCenterIndex = count / 2 - 1;
-        // Debug.Log("## calculate factor : " + dFactor + " CenterIndex :" + mCenterIndex);
-        // for (int i = 0; i < count; i++)
         int index = 0;
         for (int i = count - 1; i >= 0; i--)
         {
@@ -104,9 +113,19 @@ public class EnhanceScrollView : MonoBehaviour
             listEnhanceItems[i].CenterOffSet = dFactor * (mCenterIndex - index);
             listEnhanceItems[i].SetSelectState(false);
             GameObject obj = listEnhanceItems[i].gameObject;
-            DragEnhanceView script = obj.GetComponent<DragEnhanceView>();
-            if (script != null)
-                script.SetScrollView(this);
+
+            if (inputType == InputSystemType.NGUIAndWorldInput)
+            {
+                DragEnhanceView script = obj.GetComponent<DragEnhanceView>();
+                if (script != null)
+                    script.SetScrollView(this);
+            }
+            else
+            {
+                UDragEnhanceView script = obj.GetComponent<UDragEnhanceView>();
+                if (script != null)
+                    script.SetScrollView(this);
+            }
             index++;
         }
 
@@ -163,8 +182,8 @@ public class EnhanceScrollView : MonoBehaviour
             EnhanceItem itemScript = listEnhanceItems[i];
             float xValue = GetXPosValue(fValue, itemScript.CenterOffSet);
             float scaleValue = GetScaleValue(fValue, itemScript.CenterOffSet);
-            float depthValue = depthCurve.Evaluate(fValue + itemScript.CenterOffSet);
-            itemScript.UpdateScrollViewItems(xValue, -depthValue * depthFactor, yFixedPositionValue, scaleValue);
+            float depthCurveValue = depthCurve.Evaluate(fValue + itemScript.CenterOffSet);
+            itemScript.UpdateScrollViewItems(xValue, depthCurveValue, depthFactor, listEnhanceItems.Count, yFixedPositionValue, scaleValue);
         }
     }
 
