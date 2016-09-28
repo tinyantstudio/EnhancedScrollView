@@ -34,7 +34,7 @@ Easy way to make better Curve: Copy EnhancedScrollView.cs Component and paste it
 
 <pre><code>
 /// 
-/// **NGUI Enhance item example**
+/// NGUI Enhance item example
 /// 
 public class MyNGUIEnhanceItem : EnhanceItem
 {
@@ -60,7 +60,7 @@ public class MyNGUIEnhanceItem : EnhanceItem
 
 
 ///
-/// **UGUI Enhance item example**
+/// UGUI Enhance item example
 ///
 public class MyUGUIEnhanceItem : EnhanceItem
 {
