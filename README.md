@@ -91,7 +91,7 @@ public class MyUGUIEnhanceItem : EnhanceItem
 </code></pre>
 
 ## ScreenShot
-![ScreenShot](https://github.com/tinyantstudio/EnhancedScrollView/blob/master/screenshot.png)
+![screenshot](https://user-images.githubusercontent.com/14041295/109735335-8f891480-7bfd-11eb-9b1a-68bf40322896.png)
 
 
 **If you have some cool ideas or bugs just share with us or open issues**
