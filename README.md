@@ -95,3 +95,8 @@ public class MyUGUIEnhanceItem : EnhanceItem
 
 
 **If you have some cool ideas or bugs just share with us or open issues**
+
+
+# License
+MIT
+
